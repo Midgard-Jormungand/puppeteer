@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import akka.actor.typed.scaladsl.adapter._
 import org.slf4j.LoggerFactory
-
+import org.seekloud.puppeteer.client.core.CaptureActor
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -28,5 +28,6 @@ object Boot {
   implicit val scheduler: Scheduler = system.scheduler
   implicit val timeout: Timeout = Timeout(20 seconds)
 
+  val captureActor = system.spawn(CaptureActor.create(), "captureActor")
 
 }
