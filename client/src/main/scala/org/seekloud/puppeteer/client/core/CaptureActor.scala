@@ -4,14 +4,17 @@ import java.nio.channels.{Channels, Pipe}
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
+import com.jme3.math.FastMath
 import javax.sound.sampled._
 import org.bytedeco.opencv.global.opencv_videoio
 import org.bytedeco.opencv.opencv_core.Mat
 import org.bytedeco.opencv.opencv_videoio.VideoCapture
-import org.seekloud.puppeteer.client.Boot.blockingDispatcher
+import org.seekloud.puppeteer.client.Boot.{blockingDispatcher, executor, model}
 import org.seekloud.puppeteer.client.common.{Constants, CvUtils}
 import org.slf4j.LoggerFactory
 import javafx.scene.canvas.GraphicsContext
+import org.seekloud.puppeteer.client.model.RenderEngine
+import org.seekloud.puppeteer.client.utils.RecognitionClient
 
 import scala.collection.mutable
 
@@ -193,7 +196,12 @@ object CaptureActor {
             val rstArray = CvUtils.extractMatData(frame)
             RecognitionClient.recognition(rstArray).map {
               case Right(rsp) =>
-                ctx.self ! rsp
+
+                RenderEngine.enqueueToEngine({
+                  model.rightUpperArmChange(0,0,FastMath.PI/2)
+                  model.rightForearmChange(0,0,FastMath.PI/4)
+                })
+
 
               case Left(error) =>
                 log.error("======error=======")

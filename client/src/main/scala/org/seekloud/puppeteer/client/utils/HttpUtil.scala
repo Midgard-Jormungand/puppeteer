@@ -127,6 +127,37 @@ trait HttpUtil {
     executeRequest(methodName, request, cs, needLogRsp)
   }
 
+  def postImgRequestSend(
+                          methodName: String,
+                          url: String,
+                          parameters: List[(String, String)],
+                          //                          img: java.io.File,
+                          img: Array[Byte],
+                          charsetName: String = "UTF-8",
+                          isLog: Boolean = false
+                        )(implicit executor: ExecutionContext): Future[Either[Throwable, String]] = {
+    if (isLog) {
+      log.info("Post Request [" + methodName + "] Processing...")
+      log.debug(methodName + " url=" + url)
+      log.debug(methodName + " parameters=" + parameters)
+      log.debug(methodName + " postData=" + img)
+    }
+
+    val cs = Charset.forName(charsetName)
+    ahClient.
+      preparePost(url)
+    val request = ahClient.
+      preparePost(url).
+      setFollowRedirect(true).
+      setRequestTimeout(30 * 1000).
+      setCharset(cs).
+      //      addQueryParams(parameters.map { kv => new Param(kv._1, kv._2) }.asJava).
+      //      addHeader("Content-Type", "image/gif").
+      setBody(img)
+    executeRequest(methodName, request, cs)
+  }
+
+
   def getRequestSend(
     methodName: String,
     url: String,

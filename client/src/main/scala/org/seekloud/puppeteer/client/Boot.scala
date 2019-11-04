@@ -5,6 +5,7 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.dispatch.MessageDispatcher
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import akka.actor.typed.scaladsl.adapter._
 import com.jme3.math.{ColorRGBA, FastMath, Quaternion, Vector3f}
 import com.jme3.scene.{Node, Spatial}
 import com.jme3.scene.debug.SkeletonDebugger
