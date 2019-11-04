@@ -5,7 +5,10 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.dispatch.MessageDispatcher
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import akka.actor.typed.scaladsl.adapter._
+import com.jme3.math.{ColorRGBA, FastMath, Quaternion, Vector3f}
+import com.jme3.scene.{Node, Spatial}
+import com.jme3.scene.debug.SkeletonDebugger
+import org.seekloud.puppeteer.client.model.{RenderEngine, RenderModel}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -20,7 +23,7 @@ object Boot {
 
   import org.seekloud.puppeteer.client.common.AppSettings._
 
-  implicit val system: ActorSystem = ActorSystem("theia", config)
+  implicit val system: ActorSystem = ActorSystem("puppeteer", config)
   implicit val executor: MessageDispatcher = system.dispatchers.lookup("akka.actor.my-blocking-dispatcher")
   val blockingDispatcher: DispatcherSelector = DispatcherSelector.fromConfig("akka.actor.my-blocking-dispatcher")
 
@@ -29,4 +32,16 @@ object Boot {
   implicit val timeout: Timeout = Timeout(20 seconds)
 
 
+
+  var model: RenderModel = null
+  def main(args: Array[String]): Unit = {
+    RenderEngine.start()
+    model = RenderModel(1)
+    RenderEngine.enqueueToEngine({
+      model.rightUpperArmChange(0,0,FastMath.PI/2)
+      model.rightForearmChange(0,0,FastMath.PI/4)
+    })
+  }
+
 }
+

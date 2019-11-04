@@ -33,6 +33,8 @@ public class JmeImporterTest extends SimpleApplication {
          * 摄像机
          */
         assetManager.registerLocator("model", FileLocator.class);
+
+
         cam.setLocation(new Vector3f(0f, 2f, 3f));
         cam.setRotation(new Quaternion(7.584799E-4f, 0.99156f, -0.12951611f, 0.0058092116f));
         flyCam.setMoveSpeed(10f);
