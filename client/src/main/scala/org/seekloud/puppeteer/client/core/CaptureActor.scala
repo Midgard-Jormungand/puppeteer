@@ -7,7 +7,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import com.jme3.math.{FastMath, Vector3f}
 import javax.sound.sampled._
 import org.bytedeco.opencv.global.opencv_videoio
-import org.bytedeco.opencv.opencv_core.Mat
+import org.bytedeco.opencv.opencv_core.{Mat, Size}
 import org.bytedeco.opencv.opencv_videoio.VideoCapture
 import org.seekloud.puppeteer.client.Boot.{blockingDispatcher, executor, model}
 import org.seekloud.puppeteer.client.common.{Constants, CvUtils}
@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import javafx.scene.canvas.GraphicsContext
 import org.seekloud.puppeteer.client.model.RenderEngine
 import org.seekloud.puppeteer.client.utils.RecognitionClient
+import concurrent.duration._
 
 import scala.collection.mutable
 
@@ -46,7 +47,7 @@ object CaptureActor {
 
   trait DetectCommand
 
-  final case object TimerKey4Detect
+  final case object TimerKey4Read
 
   final case object Detect extends DetectCommand
 
@@ -59,6 +60,7 @@ object CaptureActor {
 
   def create(): Behavior[Command] = Behaviors.setup[Command] { ctx =>
     log.info("create| start..")
+    ctx.self ! DevicesReady
     idle("idle|")
   }
 
@@ -70,7 +72,7 @@ object CaptureActor {
       case DevicesReady =>
         log.info(s"$logPrefix receive deviceOn")
         try {
-          val cam = new VideoCapture(WEBCAM_DEVICE_INDEX)
+          val cam = new VideoCapture("./model/dan.mp4")
           cam.set(opencv_videoio.CAP_PROP_FRAME_WIDTH, Constants.DefaultPlayer.width)
           cam.set(opencv_videoio.CAP_PROP_FRAME_HEIGHT, Constants.DefaultPlayer.height)
           camWidth = cam.get(opencv_videoio.CAP_PROP_FRAME_WIDTH).toInt
@@ -121,58 +123,62 @@ object CaptureActor {
   private def videoCapture(logPrefix: String,
                            cam: VideoCapture,
                           ): Behavior[VideoCommand] =
-    Behaviors.receive[VideoCommand] { (ctx, msg) =>
-      msg match {
-        case DeviceOn =>
-          log.info(s"$logPrefix Media camera start.")
-          ctx.self ! ReadMat
-          Behaviors.same
+    Behaviors.withTimers[VideoCommand] { timer =>
+      Behaviors.receive[VideoCommand] { (ctx, msg) =>
+        msg match {
+          case DeviceOn =>
+            log.info(s"$logPrefix Media camera start.")
 
-        case ReadMat =>
-          val frame = new Mat
-          if (cam.read(frame)) {
-            if(!recognizing){
-              recognizing = true
-              val rstArray = CvUtils.extractMatData(frame)
-              RecognitionClient.recognition(rstArray).map {
-                case Right(rsp) =>
-                  val shoulderPoint = rsp(14)
-                  val elbowPoint = rsp(15)
-                  val wristPoint = rsp(16)
-                  val upperArmVec = rsp(16).sub(rsp(15))
-                  val upperArmVector = new Vector3f(-upperArmVec.y, -upperArmVec.x, -upperArmVec.z)
-                  val forearmVector = new Vector3f(wristPoint.x - elbowPoint.x, wristPoint.y - elbowPoint.y, wristPoint.z - elbowPoint.z)
-                  if(model != null){
-                    RenderEngine.enqueueToEngine({
-                      model.rightUpperArmChange(upperArmVector.x, upperArmVector.y, upperArmVector.z)
-                      model.rightForearmChange(forearmVector,upperArmVector)
-                    })
-                  }
-                  recognizing = false
-                case Left(error) =>
-                  log.error("======error=======")
-                  recognizing = false
+//            ctx.self ! ReadMat
+            timer.startPeriodicTimer(TimerKey4Read, ReadMat, 2.seconds)
+            Behaviors.same
+
+          case ReadMat =>
+            val frame = new Mat
+            if (cam.read(frame)) {
+              if (!recognizing) {
+                recognizing = true
+                val dstImg = new Mat()
+                CvUtils.resize(frame, dstImg, 368, 368)
+                val rstArray = CvUtils.extractMatData(dstImg)
+                RecognitionClient.recognition(rstArray).map {
+                  case Right(rsp) =>
+                    val shoulderPoint = rsp(14)
+                    val elbowPoint = rsp(15)
+                    val wristPoint = rsp(16)
+                    val upperArmVector = new Vector3f(elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
+                    val forearmVector = new Vector3f(wristPoint.x - elbowPoint.x, wristPoint.y - elbowPoint.y, wristPoint.z - elbowPoint.z)
+                    if (model != null) {
+                      RenderEngine.enqueueToEngine({
+                        model.rightUpperArmChange(upperArmVector.x, upperArmVector.y, upperArmVector.z)
+                        model.rightForearmChange(forearmVector, upperArmVector)
+                      })
+                    }
+                    recognizing = false
+                  case Left(error) =>
+                    log.error("======error=======")
+                    recognizing = false
+                }
               }
+
+            } else {
+              //fixme 此处存在error
+              log.error(s"$logPrefix readMat error")
+              System.exit(0)
             }
+            //
+            //          ctx.self ! ReadMat
+            Behaviors.same
 
-          } else {
-            //fixme 此处存在error
-            log.error(s"$logPrefix readMat error")
-            System.exit(0)
-          }
+          case DeviceOff =>
+            log.info(s"$logPrefix Media camera stopped.")
+            cam.release()
+            Behaviors.stopped
 
-          ctx.self ! ReadMat
-          Behaviors.same
-
-        case DeviceOff =>
-          log.info(s"$logPrefix Media camera stopped.")
-          cam.release()
-          Behaviors.stopped
-
-        case unKnow =>
-          log.error(s"$logPrefix receive a unknow $unKnow")
-          Behaviors.same
+          case unKnow =>
+            log.error(s"$logPrefix receive a unknow $unKnow")
+            Behaviors.same
+        }
       }
     }
-
 }

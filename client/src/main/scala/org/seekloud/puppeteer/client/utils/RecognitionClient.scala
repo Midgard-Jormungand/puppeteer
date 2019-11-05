@@ -1,6 +1,9 @@
 package org.seekloud.puppeteer.client.utils
 import org.seekloud.puppeteer.client.Boot.executor
-import org.seekloud.puppeteer.shared.ptcl.Protocol.Point
+import org.seekloud.puppeteer.shared.ptcl.Protocol.{Point, RecognizeRsp}
+import org.slf4j.LoggerFactory
+import io.circe.{Encoder, Json}
+import io.circe.syntax._
 
 import scala.concurrent.Future
 
@@ -8,37 +11,27 @@ import scala.concurrent.Future
   * Created by haoshuhan on 2019/5/10.
   */
 object RecognitionClient extends HttpUtil {
-  private val recognitionBaseUrl = ""
 
-  def recognition(img: Array[Byte]): Future[Either[Int, List[Point]]] = {
-    Future(Right(List(
-      Point(0,0,0),
-      Point(1,1,1),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550),
-      Point(550,550,550)
-    )))
+  import io.circe.generic.auto._
+  import io.circe.parser.decode
+  import io.circe.syntax._
 
-//    val url = recognitionBaseUrl
-//    postImgRequestSend("recognition", url, Nil, img).map {
-//      case Right(jsonStr) =>
-//        Right(List(Point(500,500,500),Point(550,550,550)))
-//      case Left(error) =>
-//        Left(-2)
-//    }
+  private val log = LoggerFactory.getLogger(this.getClass)
 
+  private val recognitionBaseUrl = "http://10.1.69.34:5000"
+
+  def recognition(img: Array[Byte]): Future[Either[Throwable, List[Point]]] = {
+
+    val url = recognitionBaseUrl
+    postImgRequestSend("recognition", url, Nil, img).map {
+      case Right(jsonStr) =>
+        decode[RecognizeRsp](jsonStr).map{rsp =>
+          rsp.result.map(t => Point(-t._2,-t._1,-t._3))
+        }
+      case Left(error) =>
+        log.error(s"recognition error: $error")
+        Left(error)
+    }
   }
 
 

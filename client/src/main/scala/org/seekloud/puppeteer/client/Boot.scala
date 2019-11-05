@@ -32,17 +32,17 @@ object Boot {
   implicit val scheduler: Scheduler = system.scheduler
   implicit val timeout: Timeout = Timeout(20 seconds)
 
-//  val captureActor = system.spawn(CaptureActor.create(), "captureActor")
+  val captureActor = system.spawn(CaptureActor.create(), "captureActor")
 
 
   var model: RenderModel = null
   def main(args: Array[String]): Unit = {
     RenderEngine.start()
     model = RenderModel(1)
-    RenderEngine.enqueueToEngine({
-      model.rightUpperArmChange(0,0,1)
-      model.rightForearmChange(new Vector3f())
-    })
+//    RenderEngine.enqueueToEngine({
+//      model.rightUpperArmChange(0,0,1)
+//      model.rightForearmChange(new Vector3f())
+//    })
   }
 
 }
