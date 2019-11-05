@@ -2,6 +2,7 @@ package org.seekloud.puppeteer.client.model
 
 import com.jme3.animation._
 import com.jme3.math.{Quaternion, Vector3f}
+import com.jme3.math.FastMath
 import com.jme3.scene.Node
 
 /**
@@ -83,22 +84,24 @@ object RenderModelJaime extends RenderModel {
     RenderEngine.getRootNode.attachChild(model)
   }
 
-  override def rightUpperArmChange(xAngle: Float, yAngle: Float, zAngle: Float): Unit = {
-    val move = new Quaternion().fromAngles(xAngle, yAngle, zAngle)
-    println(upperArmR.getBindRotation)
-    println(upperArmR.getLocalRotation)
-
+  override def rightUpperArmChange(x: Float, y: Float, z: Float): Unit = {
+//    val initVector = (1,0,0)
+    val angle = Math.acos(y / Math.sqrt(x * x + y * y + z * z)).toFloat
+    val axis = new Vector3f(z,0,-x)
+    val move = new Quaternion().fromAngleAxis(angle, axis)
+    println(axis)
+    println(angle)
     upperArmR.setUserTransforms(Vector3f.ZERO, move, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 
-  override def rightForearmChange(xAngle: Float, yAngle: Float, zAngle: Float): Unit = {
-    val move = new Quaternion().fromAngles(xAngle, yAngle, zAngle)
-    println(forearmR.getBindRotation)
-    println(forearmR.getLocalRotation)
-
-//    forearmR.set
-    ske.updateWorldVectors()
+  override def rightForearmChange(x: Float, y: Float, z: Float): Unit = {
+//    val move = new Quaternion().fromAngles(xAngle, yAngle, zAngle)
+//    println(forearmR.getBindRotation)
+//    println(forearmR.getLocalRotation)
+//
+////    forearmR.set
+//    ske.updateWorldVectors()
   }
 
 }

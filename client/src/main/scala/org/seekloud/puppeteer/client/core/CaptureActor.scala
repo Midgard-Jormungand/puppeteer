@@ -4,7 +4,7 @@ import java.nio.channels.{Channels, Pipe}
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import com.jme3.math.FastMath
+import com.jme3.math.{FastMath, Vector3f}
 import javax.sound.sampled._
 import org.bytedeco.opencv.global.opencv_videoio
 import org.bytedeco.opencv.opencv_core.Mat
@@ -27,61 +27,22 @@ import scala.collection.mutable
 object CaptureActor {
   private val log = LoggerFactory.getLogger(this.getClass)
   private val WEBCAM_DEVICE_INDEX = 0
-  private val AUDIO_DEVICE_INDEX = 4
   val frameRate = 30
   val frameDuration: Float = 1000.0f / 30
-  val audioChannels = 1
   private var frameCount = 0
-  val aiMap = new mutable.HashMap[Byte, Byte].empty
   private var camWidth = 0
   private var camHeight = 0
-  private var liveState = false
-
-
-  //延时buffer
-  /**
-    * 定时器使用audioCapture中的定时
-    * 其他需要定时器如编码可发送消息
-    **/
 
 
   trait Command
 
-  final case class DevicesReady(gc: GraphicsContext) extends Command
-
-  final case class ChangeAi(changeIndex: Byte, changeValue: Byte) extends Command
-
-  final case class StartLive(liveId: String, liveCode: String) extends Command
-
-  final case object PushAuthFailed extends Command
-
-  final case object StopEncode extends Command with DrawCommand with AudioCommand
+  final case object DevicesReady extends Command
 
   final case class ChildDead[U](name: String, childRef: ActorRef[U]) extends Command
 
   trait VideoCommand
 
   final case object ReadMat extends VideoCommand
-
-  trait AudioCommand
-
-  final case class Encoder(videoEncoder: ActorRef[EncodeActor.VideoEncodeCommand]) extends Command with AudioCommand
-
-  final case class SetSampleInterval(line: TargetDataLine, audioBytes: Array[Byte]) extends AudioCommand
-
-  final case class Sample(line: TargetDataLine, audioBytes: Array[Byte]) extends AudioCommand
-
-  trait DrawCommand
-
-  final case object DrawFrame extends DrawCommand
-
-  final case object DrawKey
-
-  final case object Count extends DrawCommand
-
-  final case object TimerKey4Count
-
-  final case object TimerKey4Draw
 
   trait DetectCommand
 
@@ -92,9 +53,9 @@ object CaptureActor {
   /**
     * 控制消息
     **/
-  final case object DeviceOn extends Command with VideoCommand with AudioCommand with DrawCommand with DetectCommand
+  final case object DeviceOn extends Command with VideoCommand with DetectCommand
 
-  final case object DeviceOff extends Command with VideoCommand with AudioCommand with DrawCommand with DetectCommand
+  final case object DeviceOff extends Command with VideoCommand with DetectCommand
 
   def create(): Behavior[Command] = Behaviors.setup[Command] { ctx =>
     log.info("create| start..")
@@ -106,7 +67,7 @@ object CaptureActor {
                     logPrefix: String,
                   ): Behavior[Command] = Behaviors.receive[Command] { (ctx, msg) =>
     msg match {
-      case msg: DevicesReady =>
+      case DevicesReady =>
         log.info(s"$logPrefix receive deviceOn")
         try {
           val cam = new VideoCapture(WEBCAM_DEVICE_INDEX)
@@ -135,7 +96,6 @@ object CaptureActor {
   // act as new state
   private def work(logPrefix: String,
                    videoActor: ActorRef[VideoCommand],
-                   encodeActor: Option[ActorRef[EncodeActor.EncodeCommand]] = None
                   ): Behavior[Command] =
     Behaviors.receive[Command] { (ctx, msg) =>
       msg match {
@@ -147,31 +107,7 @@ object CaptureActor {
         case DeviceOff =>
           log.info(s"$logPrefix stop media devices.")
           videoActor ! DeviceOff
-          encodeActor.foreach(_ ! EncodeActor.StopEncode)
           idle("idle")
-
-        case StopEncode =>
-          liveState = false
-          log.info(s"$logPrefix receive StopEncode")
-          encodeActor.foreach(_ ! EncodeActor.StopEncode)
-          work(logPrefix, videoActor, None)
-
-
-        case msg: StartLive =>
-          log.info(s"$logPrefix receive StartLive $msg")
-          val pipe = Pipe.open() //ts流通道
-        val encodeActor = ctx.spawn(EncodeActor.create("create|"), "encodeActor", blockingDispatcher)
-          encodeActor ! EncodeActor.EncodeInit(Channels.newOutputStream(pipe.sink()), camWidth, camHeight)
-          work(logPrefix, videoActor, Some(encodeActor))
-
-        case msg: Encoder =>
-          log.info(s"$logPrefix receive Encoder")
-          Behaviors.same
-
-        case PushAuthFailed =>
-          log.info(s"$logPrefix receive PushAuthFailed")
-          //todo:待处理
-          Behaviors.same
 
         case unKnow =>
           log.error(s"$logPrefix receive a unknow $unKnow")
@@ -196,10 +132,10 @@ object CaptureActor {
             val rstArray = CvUtils.extractMatData(frame)
             RecognitionClient.recognition(rstArray).map {
               case Right(rsp) =>
-
+                val shoulderPoint = rsp.head
+                val elbowPoint = rsp(1)
                 RenderEngine.enqueueToEngine({
-                  model.rightUpperArmChange(0,0,FastMath.PI/2)
-                  model.rightForearmChange(0,0,FastMath.PI/4)
+                  model.rightUpperArmChange(elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
                 })
 
 

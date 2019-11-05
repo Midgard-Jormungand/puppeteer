@@ -26,8 +26,8 @@ trait RenderModel {
 
   def setModel():Unit
 
-  def rightUpperArmChange(xAngle: Float, yAngle: Float, zAngle: Float): Unit
+  def rightUpperArmChange(x: Float,y: Float, z: Float): Unit
 
-  def rightForearmChange(xAngle: Float, yAngle: Float, zAngle: Float): Unit
+  def rightForearmChange(x: Float, y: Float, z: Float): Unit
 }
 
