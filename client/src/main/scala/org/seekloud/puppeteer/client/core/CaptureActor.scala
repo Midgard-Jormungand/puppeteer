@@ -115,6 +115,8 @@ object CaptureActor {
       }
     }
 
+
+  var recognizing= false
   // act as new actor spawned by the parent.ctx
   private def videoCapture(logPrefix: String,
                            cam: VideoCapture,
@@ -129,19 +131,26 @@ object CaptureActor {
         case ReadMat =>
           val frame = new Mat
           if (cam.read(frame)) {
-            val rstArray = CvUtils.extractMatData(frame)
-            RecognitionClient.recognition(rstArray).map {
-              case Right(rsp) =>
-                val shoulderPoint = rsp.head
-                val elbowPoint = rsp(1)
-                RenderEngine.enqueueToEngine({
-                  model.rightUpperArmChange(elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
-                })
+            if(!recognizing){
+              recognizing = true
+              val rstArray = CvUtils.extractMatData(frame)
+              RecognitionClient.recognition(rstArray).map {
+                case Right(rsp) =>
+                  val shoulderPoint = rsp.head
+                  val elbowPoint = rsp(1)
+                  val upperArmVector = (elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
 
-
-              case Left(error) =>
-                log.error("======error=======")
+                  if(model != null){
+                    RenderEngine.enqueueToEngine({
+                      model.rightUpperArmChange(elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
+                    })
+                  }
+                  recognizing = false
+                case Left(error) =>
+                  log.error("======error=======")
+              }
             }
+
           } else {
             //fixme 此处存在error
             log.error(s"$logPrefix readMat error")
