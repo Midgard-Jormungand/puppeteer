@@ -116,7 +116,7 @@ object CaptureActor {
     }
 
 
-  var recognizing= false
+  private var recognizing = false
   // act as new actor spawned by the parent.ctx
   private def videoCapture(logPrefix: String,
                            cam: VideoCapture,
@@ -136,18 +136,22 @@ object CaptureActor {
               val rstArray = CvUtils.extractMatData(frame)
               RecognitionClient.recognition(rstArray).map {
                 case Right(rsp) =>
-                  val shoulderPoint = rsp.head
-                  val elbowPoint = rsp(1)
-                  val upperArmVector = (elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
-
+                  val shoulderPoint = rsp(14)
+                  val elbowPoint = rsp(15)
+                  val wristPoint = rsp(16)
+                  val upperArmVec = rsp(16).sub(rsp(15))
+                  val upperArmVector = new Vector3f(-upperArmVec.y, -upperArmVec.x, -upperArmVec.z)
+                  val forearmVector = new Vector3f(wristPoint.x - elbowPoint.x, wristPoint.y - elbowPoint.y, wristPoint.z - elbowPoint.z)
                   if(model != null){
                     RenderEngine.enqueueToEngine({
-                      model.rightUpperArmChange(elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
+                      model.rightUpperArmChange(upperArmVector.x, upperArmVector.y, upperArmVector.z)
+                      model.rightForearmChange(forearmVector,upperArmVector)
                     })
                   }
                   recognizing = false
                 case Left(error) =>
                   log.error("======error=======")
+                  recognizing = false
               }
             }
 

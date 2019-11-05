@@ -1,5 +1,6 @@
 package org.seekloud.puppeteer.client.model
 
+import com.jme3.math.Vector3f
 import com.jme3.scene.Node
 
 /**
@@ -28,6 +29,6 @@ trait RenderModel {
 
   def rightUpperArmChange(x: Float,y: Float, z: Float): Unit
 
-  def rightForearmChange(x: Float, y: Float, z: Float): Unit
+  def rightForearmChange(forearmVector: Vector3f = Vector3f.ZERO, upperArmVector: Vector3f = Vector3f.ZERO): Unit
 }
 

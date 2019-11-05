@@ -41,6 +41,7 @@ object Boot {
     model = RenderModel(1)
     RenderEngine.enqueueToEngine({
       model.rightUpperArmChange(0,0,1)
+      model.rightForearmChange(new Vector3f())
     })
   }
 

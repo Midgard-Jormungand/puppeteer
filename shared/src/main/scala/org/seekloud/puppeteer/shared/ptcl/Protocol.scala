@@ -5,5 +5,10 @@ package org.seekloud.puppeteer.shared.ptcl
   */
 object Protocol {
   case class PointList(data: List[Point])
-  case class Point(x: Float, y: Float, z: Float)
+  case class Point(x: Float, y: Float, z: Float){
+    def sub(point: Point) :Point = {
+      Point(x - point.x, y-point.y,z-point.z)
+    }
+  }
+
 }
