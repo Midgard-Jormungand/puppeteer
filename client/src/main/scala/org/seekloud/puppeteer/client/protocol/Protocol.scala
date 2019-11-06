@@ -1,5 +1,5 @@
 package org.seekloud.puppeteer.client.protocol
-import com.jme3.math.{FastMath, Vector3f}
+import com.jme3.math.{FastMath, Quaternion, Vector3f}
 
 object Protocol {
   case class Vec3f(x: Float, y: Float, z: Float){
@@ -14,6 +14,10 @@ object Protocol {
       Vec3f((y * otherZ) - (z * otherY), (z * otherX) - (x * otherZ), (x * otherY) - (y * otherX))
     }
     def toJmeVec: Vector3f = new Vector3f(x, y, z)
+    def rotateFromThisToOther(other: Vec3f): Quaternion = {
+      val angle = angleBetween(other)
+      val axis = cross(other).toJmeVec
+      new Quaternion().fromAngleAxis(angle, axis)
+    }
   }
-
 }

@@ -43,7 +43,7 @@ object RenderEngine extends SimpleApplication {
   /**
     * @param fun function push into engine thread
     **/
-  def enqueueToEngine(fun: => Unit) = enqueue(new Runnable {
+  def enqueueToEngine(fun: => Unit): Unit = enqueue(new Runnable {
     override def run(): Unit = fun
   })
 

@@ -108,24 +108,14 @@ object RenderModelJaime extends RenderModel {
   }
 
   override def forearmRightChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit = {
-    val angle = forearmVector.angleBetween(upperArmVector)
-    val axis = upperArmVector.cross(forearmVector).toJmeVec
-    val move = new Quaternion().fromAngleAxis(angle, axis)
-//    val move = new Quaternion().fromAngleAxis(FastMath.PI/4, Vector3f.UNIT_Z)
-    //    println(axis)
-    //    println(angle)
-    forearmR.setUserTransforms(Vector3f.ZERO, move, Vector3f.UNIT_XYZ)
+    val rotate = upperArmVector.rotateFromThisToOther(forearmVector)
+    forearmR.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 
   override def forearmLeftChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit = {
-    val angle = forearmVector.angleBetween(upperArmVector)
-    val axis = upperArmVector.cross(forearmVector).toJmeVec
-    val move = new Quaternion().fromAngleAxis(angle, axis)
-    //    val move = new Quaternion().fromAngleAxis(FastMath.PI/4, Vector3f.UNIT_Z)
-    //    println(axis)
-    //    println(angle)
-    forearmL.setUserTransforms(Vector3f.ZERO, move, Vector3f.UNIT_XYZ)
+    val rotate = upperArmVector.rotateFromThisToOther(forearmVector)
+    forearmL.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 
