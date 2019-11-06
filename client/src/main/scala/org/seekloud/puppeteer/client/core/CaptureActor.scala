@@ -140,19 +140,21 @@ object CaptureActor {
             val frame = new Mat
             if (cam.read(frame)) {
               if (!recognizing) {
-                println("recognize")
                 val t1 = System.currentTimeMillis()
                 recognizing = true
+                println("recognize")
                 val dstImg = new Mat()
                 CvUtils.resize(frame, dstImg, 368, 368)
+                val t2 = System.currentTimeMillis()
                 val rstArray = CvUtils.extractMatData(dstImg)
+                val t3 = System.currentTimeMillis()
                 RecognitionClient.recognition(rstArray).map {
                   case Right(rsp) =>
                     println("关键点数量 ",rsp.length)
                     controlModel(rsp)
                     recognizing = false
-                    val t3 = System.currentTimeMillis()
-                    println("总时长 ",t3 - t0,"         识别时长 ",t3 - t1)
+                    val t4 = System.currentTimeMillis()
+                    println("总时长 ", t4 - t0, "    cam read时长 ", t1 - t0, "    resize时长 ", t2 - t1, "    extractMatData时长 ", t3 - t2, "    识别时长 ", t4 - t3)
                   case Left(error) =>
                     log.error("======error=======")
                     recognizing = false
