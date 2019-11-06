@@ -171,6 +171,8 @@ object CaptureActor {
         }
       }
     }
+
+
   def controlModel(rsp:Array[Vec3f]): Unit = {
     // 3d point
     val hip = rsp.head
@@ -190,11 +192,13 @@ object CaptureActor {
     val shoulderR = rsp(14)
     val elbowR = rsp(15)
     val wristR = rsp(16)
+
     // 3d point to bone vector
     val upperArmLVec = elbowL - shoulderL
     val forearmLVec = wristL - elbowL
     val upperArmRVec = elbowR - shoulderR
     val forearmRVec = wristR - elbowR
+
     // change model
     if (model != null) {
       RenderEngine.enqueueToEngine({
