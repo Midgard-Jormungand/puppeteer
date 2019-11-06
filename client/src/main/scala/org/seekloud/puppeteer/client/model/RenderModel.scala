@@ -1,6 +1,5 @@
 package org.seekloud.puppeteer.client.model
 
-import com.jme3.math.Vector3f
 import com.jme3.scene.Node
 import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 

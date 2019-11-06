@@ -2,7 +2,6 @@ package org.seekloud.puppeteer.client.utils
 import org.seekloud.puppeteer.client.Boot.executor
 import org.seekloud.puppeteer.shared.ptcl.Protocol.RecognizeRsp
 import org.slf4j.LoggerFactory
-import io.circe.{Encoder, Json}
 import io.circe.syntax._
 import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 
@@ -15,7 +14,6 @@ object RecognitionClient extends HttpUtil {
 
   import io.circe.generic.auto._
   import io.circe.parser.decode
-  import io.circe.syntax._
 
   private val log = LoggerFactory.getLogger(this.getClass)
 

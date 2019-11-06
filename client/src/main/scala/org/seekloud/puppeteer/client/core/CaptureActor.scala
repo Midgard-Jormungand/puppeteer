@@ -1,24 +1,18 @@
 package org.seekloud.puppeteer.client.core
 
-import java.nio.channels.{Channels, Pipe}
-
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import com.jme3.math.{FastMath, Vector3f}
-import javax.sound.sampled._
 import org.bytedeco.opencv.global.opencv_videoio
 import org.bytedeco.opencv.opencv_core.{Mat, Size}
 import org.bytedeco.opencv.opencv_videoio.VideoCapture
 import org.seekloud.puppeteer.client.Boot.{blockingDispatcher, executor, model}
 import org.seekloud.puppeteer.client.common.{Constants, CvUtils}
 import org.slf4j.LoggerFactory
-import javafx.scene.canvas.GraphicsContext
 import org.seekloud.puppeteer.client.model.RenderEngine
 import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 import org.seekloud.puppeteer.client.utils.RecognitionClient
 
 import concurrent.duration._
-import scala.collection.mutable
 
 /**
   * Created by sky
@@ -46,18 +40,14 @@ object CaptureActor {
 
   final case object ReadMat extends VideoCommand
 
-  trait DetectCommand
-
   final case object TimerKey4Read
-
-  final case object Detect extends DetectCommand
 
   /**
     * 控制消息
     **/
-  final case object DeviceOn extends Command with VideoCommand with DetectCommand
+  final case object DeviceOn extends Command with VideoCommand
 
-  final case object DeviceOff extends Command with VideoCommand with DetectCommand
+  final case object DeviceOff extends Command with VideoCommand
 
   def create(): Behavior[Command] = Behaviors.setup[Command] { ctx =>
     log.info("create| start..")
