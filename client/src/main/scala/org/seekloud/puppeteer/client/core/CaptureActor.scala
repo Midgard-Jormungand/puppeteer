@@ -14,9 +14,10 @@ import org.seekloud.puppeteer.client.common.{Constants, CvUtils}
 import org.slf4j.LoggerFactory
 import javafx.scene.canvas.GraphicsContext
 import org.seekloud.puppeteer.client.model.RenderEngine
+import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 import org.seekloud.puppeteer.client.utils.RecognitionClient
-import concurrent.duration._
 
+import concurrent.duration._
 import scala.collection.mutable
 
 /**
@@ -134,27 +135,24 @@ object CaptureActor {
             Behaviors.same
 
           case ReadMat =>
+            val t0 = System.currentTimeMillis()
+            println("get readMat")
             val frame = new Mat
             if (cam.read(frame)) {
               if (!recognizing) {
+                println("recognize")
+                val t1 = System.currentTimeMillis()
                 recognizing = true
                 val dstImg = new Mat()
                 CvUtils.resize(frame, dstImg, 368, 368)
                 val rstArray = CvUtils.extractMatData(dstImg)
                 RecognitionClient.recognition(rstArray).map {
                   case Right(rsp) =>
-                    val shoulderPoint = rsp(14)
-                    val elbowPoint = rsp(15)
-                    val wristPoint = rsp(16)
-                    val upperArmVector = new Vector3f(elbowPoint.x - shoulderPoint.x, elbowPoint.y - shoulderPoint.y, elbowPoint.z - shoulderPoint.z)
-                    val forearmVector = new Vector3f(wristPoint.x - elbowPoint.x, wristPoint.y - elbowPoint.y, wristPoint.z - elbowPoint.z)
-                    if (model != null) {
-                      RenderEngine.enqueueToEngine({
-                        model.rightUpperArmChange(upperArmVector.x, upperArmVector.y, upperArmVector.z)
-                        model.rightForearmChange(forearmVector, upperArmVector)
-                      })
-                    }
+                    println("关键点数量 ",rsp.length)
+                    controlModel(rsp)
                     recognizing = false
+                    val t3 = System.currentTimeMillis()
+                    println("总时长 ",t3 - t0,"         识别时长 ",t3 - t1)
                   case Left(error) =>
                     log.error("======error=======")
                     recognizing = false
@@ -181,4 +179,40 @@ object CaptureActor {
         }
       }
     }
+  def controlModel(rsp:Array[Vec3f]): Unit = {
+    // 3d point
+    val hip = rsp.head
+    val hipR = rsp(1)
+    val kneeR = rsp(2)
+    val footR = rsp(3)
+    val hipL = rsp(4)
+    val kneeL = rsp(5)
+    val footL = rsp(6)
+    val spine = rsp(7)
+    val thorax = rsp(8)
+    val neck = rsp(9)
+    val head = rsp(10)
+    val shoulderL = rsp(11)
+    val elbowL = rsp(12)
+    val wristL = rsp(13)
+    val shoulderR = rsp(14)
+    val elbowR = rsp(15)
+    val wristR = rsp(16)
+    // 3d point to bone vector
+    val upperArmLVec = elbowL - shoulderL
+    val forearmLVec = wristL - elbowL
+    val upperArmRVec = elbowR - shoulderR
+    val forearmRVec = wristR - elbowR
+    // change model
+    if (model != null) {
+      RenderEngine.enqueueToEngine({
+        model.upperArmRightChange(upperArmRVec)
+        model.forearmRightChange(forearmRVec, upperArmRVec)
+        model.upperArmLeftChange(upperArmLVec)
+        model.forearmLeftChange(forearmLVec, upperArmLVec)
+      })
+    }
+  }
 }
+
+

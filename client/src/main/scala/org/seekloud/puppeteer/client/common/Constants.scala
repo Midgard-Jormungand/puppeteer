@@ -23,8 +23,8 @@ object Constants {
     val height = 864
   }
   object DefaultPlayer {
-    val width = 640
-    val height = 480
+    val width = 1920
+    val height = 1080
   }
 
   val loginInfoCache = new File(loginInfoCachePath)

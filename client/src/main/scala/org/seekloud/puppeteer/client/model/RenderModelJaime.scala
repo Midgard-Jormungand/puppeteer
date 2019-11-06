@@ -4,6 +4,7 @@ import com.jme3.animation._
 import com.jme3.math.{Quaternion, Vector3f}
 import com.jme3.math.FastMath
 import com.jme3.scene.Node
+import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 
 /**
   * Created by sky
@@ -84,27 +85,47 @@ object RenderModelJaime extends RenderModel {
     RenderEngine.getRootNode.attachChild(model)
   }
 
-  override def rightUpperArmChange(x: Float, y: Float, z: Float): Unit = {
-//    val initVector = (0,1,0)
-    val angle = Math.acos(y / Math.sqrt(x * x + y * y + z * z)).toFloat
-    val axis = new Vector3f(z,0,-x)
-    val move = new Quaternion().fromAngleAxis(angle, axis)
-//    println(axis)
-//    println(angle)
-    upperArmR.setUserTransforms(Vector3f.ZERO, move, Vector3f.UNIT_XYZ)
+  override def upperArmLeftChange(vec: Vec3f): Unit = {
+    //    val initVector = (0,-1,0)
+    val angle = FastMath.acos(-vec.y / vec.module)
+    val axis = new Vector3f(-vec.z, 0, vec.x)
+    val rotate = new Quaternion().fromAngleAxis(angle, axis)
+    //    println(axis)
+    //    println(angle)
+    upperArmL.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 
-  override def rightForearmChange(forearmVector: Vector3f = Vector3f.ZERO, upperArmVector: Vector3f = Vector3f.ZERO): Unit = {
-    forearmVector.normalizeLocal()
-    upperArmVector.normalizeLocal()
+  override def upperArmRightChange(vec: Vec3f): Unit = {
+    //    val initVector = (0,1,0)
+    val angle = FastMath.acos(vec.y / vec.module)
+    val axis = new Vector3f(vec.z, 0, -vec.x)
+    val rotate = new Quaternion().fromAngleAxis(angle, axis)
+    //    println(axis)
+    //    println(angle)
+    upperArmR.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
+    ske.updateWorldVectors()
+  }
+
+  override def forearmRightChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit = {
     val angle = forearmVector.angleBetween(upperArmVector)
-    val axis = upperArmVector.cross(forearmVector)
+    val axis = upperArmVector.cross(forearmVector).toJmeVec
     val move = new Quaternion().fromAngleAxis(angle, axis)
 //    val move = new Quaternion().fromAngleAxis(FastMath.PI/4, Vector3f.UNIT_Z)
     //    println(axis)
     //    println(angle)
     forearmR.setUserTransforms(Vector3f.ZERO, move, Vector3f.UNIT_XYZ)
+    ske.updateWorldVectors()
+  }
+
+  override def forearmLeftChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit = {
+    val angle = forearmVector.angleBetween(upperArmVector)
+    val axis = upperArmVector.cross(forearmVector).toJmeVec
+    val move = new Quaternion().fromAngleAxis(angle, axis)
+    //    val move = new Quaternion().fromAngleAxis(FastMath.PI/4, Vector3f.UNIT_Z)
+    //    println(axis)
+    //    println(angle)
+    forearmL.setUserTransforms(Vector3f.ZERO, move, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 

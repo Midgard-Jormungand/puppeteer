@@ -2,6 +2,7 @@ package org.seekloud.puppeteer.client.model
 
 import com.jme3.math.Vector3f
 import com.jme3.scene.Node
+import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 
 /**
  * Created by sky
@@ -27,8 +28,12 @@ trait RenderModel {
 
   def setModel():Unit
 
-  def rightUpperArmChange(x: Float,y: Float, z: Float): Unit
+  def upperArmLeftChange(vec: Vec3f): Unit
 
-  def rightForearmChange(forearmVector: Vector3f = Vector3f.ZERO, upperArmVector: Vector3f = Vector3f.ZERO): Unit
+  def forearmLeftChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit
+
+  def upperArmRightChange(vec: Vec3f): Unit
+
+  def forearmRightChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit
 }
 
