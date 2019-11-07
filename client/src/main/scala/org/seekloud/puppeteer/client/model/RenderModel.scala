@@ -1,7 +1,7 @@
 package org.seekloud.puppeteer.client.model
 
 import com.jme3.scene.Node
-import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
+import org.seekloud.puppeteer.client.utils.MathUtil.Vec3f
 
 /**
  * Created by hgz
@@ -38,6 +38,5 @@ trait RenderModel {
 
   def forearmRightChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit
 
-//  def
 }
 

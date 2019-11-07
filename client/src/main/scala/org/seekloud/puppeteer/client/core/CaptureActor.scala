@@ -9,7 +9,7 @@ import org.seekloud.puppeteer.client.Boot.{blockingDispatcher, executor, model}
 import org.seekloud.puppeteer.client.common.{Constants, CvUtils}
 import org.slf4j.LoggerFactory
 import org.seekloud.puppeteer.client.model.RenderEngine
-import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
+import org.seekloud.puppeteer.client.utils.MathUtil.Vec3f
 import org.seekloud.puppeteer.client.utils.RecognitionClient
 
 import concurrent.duration._

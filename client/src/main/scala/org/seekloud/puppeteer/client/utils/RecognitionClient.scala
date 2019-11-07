@@ -3,7 +3,7 @@ import org.seekloud.puppeteer.client.Boot.executor
 import org.seekloud.puppeteer.shared.ptcl.Protocol.RecognizeRsp
 import org.slf4j.LoggerFactory
 import io.circe.syntax._
-import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
+import org.seekloud.puppeteer.client.utils.MathUtil.Vec3f
 
 import scala.concurrent.Future
 

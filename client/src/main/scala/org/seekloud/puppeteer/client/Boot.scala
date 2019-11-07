@@ -9,7 +9,6 @@ import akka.actor.typed.scaladsl.adapter._
 import org.seekloud.puppeteer.client.model.{RenderEngine, RenderModel}
 import org.slf4j.LoggerFactory
 import org.seekloud.puppeteer.client.core.CaptureActor
-import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
