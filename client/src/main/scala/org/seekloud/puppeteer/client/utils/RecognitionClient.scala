@@ -25,7 +25,7 @@ object RecognitionClient extends HttpUtil {
     postImgRequestSend("recognition", url, Nil, img).map {
       case Right(jsonStr) =>
         decode[RecognizeRsp](jsonStr).map{rsp =>
-          rsp.result.map(t => Vec3f(-t._2,-t._1,-t._3))
+          rsp.result.map(t => Vec3f(t._1, t._2, t._3))
         }
       case Left(error) =>
         log.error(s"recognition error: $error")

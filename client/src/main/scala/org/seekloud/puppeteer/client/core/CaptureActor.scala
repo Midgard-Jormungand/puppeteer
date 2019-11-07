@@ -15,9 +15,8 @@ import org.seekloud.puppeteer.client.utils.RecognitionClient
 import concurrent.duration._
 
 /**
-  * Created by sky
-  * Date on 2019/8/20
-  * Time at 上午10:02
+  * Created by dql
+  * Date on 2019/11/1
   * videoCapture/audioCapture
   */
 object CaptureActor {
@@ -127,12 +126,12 @@ object CaptureActor {
           case ReadMat =>
             val t0 = System.currentTimeMillis()
             println("get readMat")
-            val frame = new Mat
-            if (cam.read(frame)) {
-              if (!recognizing) {
+            if (!recognizing) {
+              recognizing = true
+              println("recognize")
+              val frame = new Mat
+              if (cam.read(frame)) {
                 val t1 = System.currentTimeMillis()
-                recognizing = true
-                println("recognize")
                 val dstImg = new Mat()
                 CvUtils.resize(frame, dstImg, 368, 368)
                 val t2 = System.currentTimeMillis()
@@ -140,7 +139,6 @@ object CaptureActor {
                 val t3 = System.currentTimeMillis()
                 RecognitionClient.recognition(rstArray).map {
                   case Right(rsp) =>
-                    println("关键点数量 ",rsp.length)
                     controlModel(rsp)
                     recognizing = false
                     val t4 = System.currentTimeMillis()
@@ -149,12 +147,11 @@ object CaptureActor {
                     log.error("======error=======")
                     recognizing = false
                 }
+              } else {
+                  //fixme 此处存在error
+                  log.error(s"$logPrefix readMat error")
+                  System.exit(0)
               }
-
-            } else {
-              //fixme 此处存在error
-              log.error(s"$logPrefix readMat error")
-              System.exit(0)
             }
             //
             //          ctx.self ! ReadMat
@@ -173,31 +170,45 @@ object CaptureActor {
     }
 
 
-  def controlModel(rsp:Array[Vec3f]): Unit = {
+  def controlModel(pointArray:Array[Vec3f]): Unit = {
     // 3d point
-    val hip = rsp.head
-    val hipR = rsp(1)
-    val kneeR = rsp(2)
-    val footR = rsp(3)
-    val hipL = rsp(4)
-    val kneeL = rsp(5)
-    val footL = rsp(6)
-    val spine = rsp(7)
-    val thorax = rsp(8)
-    val neck = rsp(9)
-    val head = rsp(10)
-    val shoulderL = rsp(11)
-    val elbowL = rsp(12)
-    val wristL = rsp(13)
-    val shoulderR = rsp(14)
-    val elbowR = rsp(15)
-    val wristR = rsp(16)
+//    println(pointArray.zipWithIndex.mkString("\n"))
+    val hip = pointArray.head
+    val hipR = pointArray(1)
+    val kneeR = pointArray(2)
+    val footR = pointArray(3)
+    val hipL = pointArray(4)
+    val kneeL = pointArray(5)
+    val footL = pointArray(6)
+    val spine = pointArray(7)
+    val thorax = pointArray(8)
+    val neck = pointArray(9)
+    val head = pointArray(10)
+    val shoulderL = pointArray(11)
+    val elbowL = pointArray(12)
+    val wristL = pointArray(13)
+    val shoulderR = pointArray(14)
+    val elbowR = pointArray(15)
+    val wristR = pointArray(16)
 
     // 3d point to bone vector
-    val upperArmLVec = elbowL - shoulderL
-    val forearmLVec = wristL - elbowL
-    val upperArmRVec = elbowR - shoulderR
-    val forearmRVec = wristR - elbowR
+    val headVecAtOrigin = head - neck
+    val headVec = Vec3f(headVecAtOrigin.x, -headVecAtOrigin.y, -headVecAtOrigin.z)
+
+    val neckVecAtOrigin = neck - thorax
+    val neckVec = Vec3f(neckVecAtOrigin.x, -neckVecAtOrigin.y, -neckVecAtOrigin.z)
+
+    val upperArmLVecAtOrigin = elbowL - shoulderL
+    val upperArmLVec = Vec3f(upperArmLVecAtOrigin.y, upperArmLVecAtOrigin.x, -upperArmLVecAtOrigin.z)
+
+    val forearmLVecAtOrigin = wristL - elbowL
+    val forearmLVec = Vec3f(forearmLVecAtOrigin.y, forearmLVecAtOrigin.x, -forearmLVecAtOrigin.z)
+
+    val upperArmRVecAtOrigin = elbowR - shoulderR
+    val upperArmRVec = Vec3f(-upperArmRVecAtOrigin.y, -upperArmRVecAtOrigin.x, -upperArmRVecAtOrigin.z)
+
+    val forearmRVecAtOrigin = wristR - elbowR
+    val forearmRVec = Vec3f(-forearmRVecAtOrigin.y, -forearmRVecAtOrigin.x, -forearmRVecAtOrigin.z)
 
     // change model
     if (model != null) {
@@ -206,6 +217,8 @@ object CaptureActor {
         model.forearmRightChange(forearmRVec, upperArmRVec)
         model.upperArmLeftChange(upperArmLVec)
         model.forearmLeftChange(forearmLVec, upperArmLVec)
+        model.neckChange(neckVec)
+        model.headChange(headVec, neckVec)
       })
     }
   }

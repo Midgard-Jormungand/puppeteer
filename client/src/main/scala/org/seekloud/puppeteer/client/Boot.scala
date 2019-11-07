@@ -9,6 +9,8 @@ import akka.actor.typed.scaladsl.adapter._
 import org.seekloud.puppeteer.client.model.{RenderEngine, RenderModel}
 import org.slf4j.LoggerFactory
 import org.seekloud.puppeteer.client.core.CaptureActor
+import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
+
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -37,8 +39,7 @@ object Boot {
     RenderEngine.start()
     model = RenderModel(1)
 //    RenderEngine.enqueueToEngine({
-//      model.rightUpperArmChange(0,0,1)
-//      model.rightForearmChange(new Vector3f())
+//      model.headChange(Vec3f(0,0,0),Vec3f(0,0,0))
 //    })
   }
 

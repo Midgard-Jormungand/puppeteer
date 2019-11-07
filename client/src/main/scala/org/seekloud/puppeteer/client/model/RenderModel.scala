@@ -4,9 +4,8 @@ import com.jme3.scene.Node
 import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 
 /**
- * Created by sky
- * Date on 2019/9/26
- * Time at 下午7:16
+ * Created by hgz
+ * Date on 2019/11/7
  * 模型控制抽象类
  */
 object RenderModel{
@@ -27,6 +26,10 @@ trait RenderModel {
 
   def setModel():Unit
 
+  def neckChange(vec: Vec3f): Unit
+
+  def headChange(headVec: Vec3f, neckVec: Vec3f): Unit
+
   def upperArmLeftChange(vec: Vec3f): Unit
 
   def forearmLeftChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit
@@ -34,5 +37,7 @@ trait RenderModel {
   def upperArmRightChange(vec: Vec3f): Unit
 
   def forearmRightChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit
+
+//  def
 }
 

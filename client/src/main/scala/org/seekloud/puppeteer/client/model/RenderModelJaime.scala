@@ -7,8 +7,8 @@ import com.jme3.scene.Node
 import org.seekloud.puppeteer.client.protocol.Protocol.Vec3f
 
 /**
-  * Created by sky
-  * Date on 2019/9/26
+  * Created by hgz
+  * Date on 2019/11/7
   * Time at 下午7:28
   */
 object RenderModelJaime extends RenderModel {
@@ -85,19 +85,25 @@ object RenderModelJaime extends RenderModel {
     RenderEngine.getRootNode.attachChild(model)
   }
 
-  override def upperArmLeftChange(vec: Vec3f): Unit = {
-    //    val initVector = (0,-1,0)
-    val angle = FastMath.acos(-vec.y / vec.module)
-    val axis = new Vector3f(-vec.z, 0, vec.x)
+  override def neckChange(vec: Vec3f): Unit = {
+    //    val initVector = (0,1,0) x右y上z外
+    val angle = FastMath.acos(vec.y / vec.module)
+    val axis = new Vector3f(vec.z, 0, -vec.x)
     val rotate = new Quaternion().fromAngleAxis(angle, axis)
-    //    println(axis)
-    //    println(angle)
-    upperArmL.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
+    neck.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 
+  override def headChange(headVec: Vec3f, neckVec: Vec3f): Unit={
+    //    val initVector = (0,1,0) x右y上z外
+    val rotate = neckVec.rotateFromThisToOther(headVec)
+    head.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
+    ske.updateWorldVectors()
+  }
+
+
   override def upperArmRightChange(vec: Vec3f): Unit = {
-    //    val initVector = (0,1,0)
+    //    val initVector = (0,1,0) x上y左z外
     val angle = FastMath.acos(vec.y / vec.module)
     val axis = new Vector3f(vec.z, 0, -vec.x)
     val rotate = new Quaternion().fromAngleAxis(angle, axis)
@@ -108,12 +114,23 @@ object RenderModelJaime extends RenderModel {
   }
 
   override def forearmRightChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit = {
+    //    val initVector = (0,1,0) x上y左z外
     val rotate = upperArmVector.rotateFromThisToOther(forearmVector)
     forearmR.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
   }
 
+  override def upperArmLeftChange(vec: Vec3f): Unit = {
+    //    val initVector = (0,1,0) x下y右z外
+    val angle = FastMath.acos(vec.y / vec.module)
+    val axis = new Vector3f(vec.z, 0, -vec.x)
+    val rotate = new Quaternion().fromAngleAxis(angle, axis)
+    upperArmL.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
+    ske.updateWorldVectors()
+  }
+
   override def forearmLeftChange(forearmVector: Vec3f, upperArmVector: Vec3f): Unit = {
+    //    val initVector = (0,1,0) x下y右z外
     val rotate = upperArmVector.rotateFromThisToOther(forearmVector)
     forearmL.setUserTransforms(Vector3f.ZERO, rotate, Vector3f.UNIT_XYZ)
     ske.updateWorldVectors()
